@@ -19,6 +19,9 @@ namespace CollisionExample
 
         private Texture2D texture;
 
+        private double animationTimer;
+        private short animationFrame;
+
         private BoundingCircle bounds;
         /// <summary>
         /// bounding vbolume of sprite
@@ -37,13 +40,30 @@ namespace CollisionExample
             this.bounds = new BoundingCircle(position + new Vector2(-8,-8), 31);
         }
 
+        public void Update(GameTime gameTime)
+        {
+            if (Collected) return;
+
+            animationTimer += gameTime.ElapsedGameTime.TotalSeconds;
+            if (animationTimer > 0.15)
+            {
+                animationFrame++;
+                
+                if (animationFrame > 2) 
+                {
+                    animationFrame = 0;
+                }
+                animationTimer -= 0.15; 
+            }
+        }
+
         /// <summary>
         /// Loads the sprite texture using the provided ContentManager
         /// </summary>
         /// <param name="content">The ContentManager to load with</param>
         public void LoadContent(ContentManager content)
         {
-            texture = content.Load<Texture2D>("APPLE");
+            texture = content.Load<Texture2D>("appleframes");
         }
 
         /// <summary>
@@ -55,7 +75,8 @@ namespace CollisionExample
         {
             if(Collected)return;
 
-            var source = new Rectangle(0, 0, 16, 16);
+            var source = new Rectangle(animationFrame * 17, 0, 17, 20);
+            
             spriteBatch.Draw(texture, position, source, Color.White, 0, new Vector2(16, 16), 3f, SpriteEffects.None, 0);
         }
     }

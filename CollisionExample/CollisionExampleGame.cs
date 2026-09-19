@@ -13,9 +13,11 @@ namespace CollisionExample
         private SpriteBatch spriteBatch;
 
         private Texture2D background;
+        private Texture2D titleScreenTexture;
         
         private CoinSprite[] coins;
         private bool gameWon = false;
+        private bool onTitleScreen = true;
 
         private PlatformSprite[] platforms;
         private SlimeGhostSprite slimeGhost;
@@ -65,7 +67,7 @@ namespace CollisionExample
 
                 platforms[i] = new PlatformSprite(new Vector2(randomX, randomY));
 
-                coins[i] = new CoinSprite(new Vector2(randomX + 100f, randomY - 20f));
+                coins[i] = new CoinSprite(new Vector2(randomX + 100f, randomY - 30f));
             }
             slimeGhost = new SlimeGhostSprite();
 
@@ -88,6 +90,8 @@ namespace CollisionExample
             spriteFont = Content.Load<SpriteFont>("arial");
             background = Content.Load<Texture2D>("background");
             ground.LoadContent(Content);
+
+            titleScreenTexture = Content.Load<Texture2D>("titlescreen");
         }
 
         /// <summary>
@@ -98,6 +102,22 @@ namespace CollisionExample
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+            
+            foreach (var coin in coins)
+            {
+                coin.Update(gameTime);
+            }
+            
+            if (onTitleScreen)
+            {
+                if (Keyboard.GetState().IsKeyDown(Keys.E))
+                {
+                    onTitleScreen = false; // Start the game!
+                }
+                
+                base.Update(gameTime);
+                return; // Prevent gameplay updates (like movement or collisions) while on the title screen
+            }
 
             // TODO: Add your update logic here
             slimeGhost.Update(gameTime, platforms.ToList(), ground);
@@ -131,7 +151,11 @@ namespace CollisionExample
             GraphicsDevice.Clear(Color.LightSkyBlue);
             spriteBatch.Begin();
 
-            if (gameWon)
+            if (onTitleScreen)
+            {
+                spriteBatch.Draw(titleScreenTexture, new Rectangle(0, 0, 1920, 1080), Color.White);
+            }
+            else if (gameWon)
             {
                 spriteBatch.DrawString(spriteFont, "YOU WON THE GAME! PRESS ESC TO EXIT",
                     new Vector2(40, 500), Color.Gold, 0f, Vector2.Zero, 2.7f, SpriteEffects.None, 0f);

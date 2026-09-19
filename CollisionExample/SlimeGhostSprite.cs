@@ -138,6 +138,8 @@ namespace CollisionExample
                 {
                     position.Y -= overlapY;
                     _OnGround = true;
+
+                    jump = false;
                 }
                 else
                 {
