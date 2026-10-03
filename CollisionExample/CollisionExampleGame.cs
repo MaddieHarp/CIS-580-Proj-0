@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 
 namespace CollisionExample
 {
@@ -14,6 +16,8 @@ namespace CollisionExample
 
         private Texture2D background;
         private Texture2D titleScreenTexture;
+
+        private Song backgroundMusic;
         
         private CoinSprite[] coins;
         private bool gameWon = false;
@@ -24,6 +28,8 @@ namespace CollisionExample
         private SpriteFont spriteFont;
         private GroundSprite ground;
         private int coinsLeft = 7;
+
+        private SoundEffect eatSound;
 
         /// <summary>
         /// A game demonstrating collision detection
@@ -45,7 +51,7 @@ namespace CollisionExample
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+        // TODO: Add your initialization logic here
             System.Random rand = new System.Random();
 
             int platformWidth = 80; 
@@ -55,19 +61,63 @@ namespace CollisionExample
 
             int minY = 50;
             int maxY = GraphicsDevice.Viewport.Height - platformHeight - 50;
+            int paddingX = 50;
+            int paddingY = 100;
 
             // 3. Initialize arrays
             platforms = new PlatformSprite[7];
             coins = new CoinSprite[7];
 
+            List<Rectangle> placedBounds = new List<Rectangle>();
+
             for (int i = 0; i < 7; i++)
             {
-                float randomX = rand.Next(minX, maxX);
-                float randomY = rand.Next(minY, maxY);
+                int maxAttempts = 100;
+                bool foundValidSpot = false;
+                
+                float finalX = 0;
+                float finalY = 0;
 
-                platforms[i] = new PlatformSprite(new Vector2(randomX, randomY));
+                for (int attempt = 0; attempt < maxAttempts; attempt++)
+                {
+                    // 1. Generate random position
+                    int randomX = rand.Next(minX, maxX);
+                    int randomY = rand.Next(minY, maxY);
 
-                coins[i] = new CoinSprite(new Vector2(randomX + 100f, randomY - 30f));
+                    // 2. Create the test rectangle and inflate it by 50px
+                    Rectangle testBox = new Rectangle(randomX, randomY, platformWidth, platformHeight);
+                    testBox.Inflate(paddingX, paddingY);
+
+                    // 3. Check if this padded box hits any already placed platforms
+                    bool overlaps = false;
+                    foreach (Rectangle bounds in placedBounds)
+                    {
+                        if (testBox.Intersects(bounds))
+                        {
+                            overlaps = true;
+                            break; // Overlaps, try again
+                        }
+                    }
+                    if (!overlaps)
+                    {
+                        finalX = randomX;
+                        finalY = randomY;
+                        foundValidSpot = true;
+                        
+                        placedBounds.Add(new Rectangle(randomX, randomY, platformWidth, platformHeight));
+                        break;
+                    }
+                }
+
+                if (!foundValidSpot)
+                {
+                    finalX = rand.Next(minX, maxX);
+                    finalY = rand.Next(minY, maxY);
+                }
+
+                platforms[i] = new PlatformSprite(new Vector2(finalX, finalY));
+
+                coins[i] = new CoinSprite(new Vector2(finalX + 100f, finalY - 30f));
             }
             slimeGhost = new SlimeGhostSprite();
 
@@ -89,6 +139,11 @@ namespace CollisionExample
             slimeGhost.LoadContent(Content);
             spriteFont = Content.Load<SpriteFont>("arial");
             background = Content.Load<Texture2D>("background");
+            eatSound = Content.Load<SoundEffect>("eating");
+            backgroundMusic = Content.Load<Song>("backgroundMusic");
+            MediaPlayer.Play(backgroundMusic);
+            MediaPlayer.IsRepeating = true;
+            MediaPlayer.Volume = .1f;
             ground.LoadContent(Content);
 
             titleScreenTexture = Content.Load<Texture2D>("titlescreen");
@@ -100,6 +155,7 @@ namespace CollisionExample
         /// <param name="gameTime">The game time</param>
         protected override void Update(GameTime gameTime)
         {
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             
@@ -131,6 +187,7 @@ namespace CollisionExample
                     slimeGhost.Color = Color.Red;
                     coin.Collected = true;
                     coinsLeft--;
+                    eatSound.Play();
                     if(coinsLeft == 0)
                     {
                         gameWon = true;

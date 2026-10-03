@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Content;
 using CollisionExample.Collisions;
 using System.Runtime.CompilerServices;
 using System.Net;
+using Microsoft.Xna.Framework.Audio;
 
 namespace CollisionExample
 {
@@ -19,6 +20,8 @@ namespace CollisionExample
         private const float GRAVITY = 5000f;
         private const float SPEED = 750f;
         private const float JUMP = 1500f;
+
+        private SoundEffect jumpSound;
 
         private bool wasJumpKeyDown = false;
         private bool _OnGround = true;
@@ -34,6 +37,10 @@ namespace CollisionExample
         private bool flipped;
 
         private bool jump;
+
+        private int currentFrame = 0;
+        private double animationTimer = 0;
+        private const double ANIMATION_SPEED = .2;
 
         private BoundingRectangle bounds = new BoundingRectangle(new Vector2(32,29), 124, 124);
         /// <summary>
@@ -52,7 +59,8 @@ namespace CollisionExample
         /// <param name="content">The ContentManager to load with</param>
         public void LoadContent(ContentManager content)
         {
-            texture = content.Load<Texture2D>("Kangaroo");
+            jumpSound = content.Load<SoundEffect>("jumpSound");
+            texture = content.Load<Texture2D>("kangroo");
         }
         /// <summary>
         /// followed tutorial: https://www.youtube.com/watch?v=HujUFaqh-D8
@@ -90,6 +98,9 @@ namespace CollisionExample
                 _velocity.Y = -JUMP;
                 _OnGround = false;
                 jump = true;
+                currentFrame = 1;
+                animationTimer = 0;
+                jumpSound.Play();
             }
 
             wasJumpKeyDown = jumpKeyDown; 
@@ -115,6 +126,31 @@ namespace CollisionExample
             if (bounds.CollidesWith(ground.Bounds))
             {
                 ResolveCollision(ground.Bounds);
+            }
+
+            if (jump)
+            {
+                if (currentFrame == 0) 
+                {
+                    currentFrame = 1; 
+                    animationTimer = 0;
+                }
+
+                if (currentFrame < 2)
+                {
+                    animationTimer += gameTime.ElapsedGameTime.TotalSeconds;
+                    
+                    if (animationTimer >= ANIMATION_SPEED)
+                    {
+                        currentFrame++; 
+                        animationTimer = 0; 
+                    }
+                }
+            }
+            else
+            {
+                currentFrame = 0;
+                animationTimer = 0;
             }
         }
 
@@ -161,7 +197,9 @@ namespace CollisionExample
         public void Draw(SpriteBatch spriteBatch)
         {
             SpriteEffects spriteEffects = (flipped) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            var source = (jump) ? new Rectangle(64, 0, 64, 64) : new Rectangle(0, 0, 64, 64);
+            // Multiply currentFrame by 64 to shift the X position of the rectangle to the correct image
+            var source = new Rectangle(currentFrame * 60 + 6, 0, 57, 64);
+            
             spriteBatch.Draw(texture, position, source, Color, 0, new Vector2(32, 32), 3f, spriteEffects, 0);
         }
 

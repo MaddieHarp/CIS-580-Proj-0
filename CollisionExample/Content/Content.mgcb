@@ -56,6 +56,12 @@
 /processorParam:TextureFormat=Color
 /build:background.jpg
 
+#begin backgroundMusic.wav
+/importer:WavImporter
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:backgroundMusic.wav
+
 #begin coins.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -68,6 +74,18 @@
 /processorParam:TextureFormat=Color
 /build:coins.png
 
+#begin eating.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:eating.wav
+
+#begin jumpSound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:jumpSound.wav
+
 #begin Kangaroo.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -79,6 +97,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Kangaroo.png
+
+#begin kangroo.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:kangroo.png
 
 #begin PLATFORM.png
 /importer:TextureImporter
