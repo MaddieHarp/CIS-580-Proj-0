@@ -32,7 +32,13 @@ namespace CollisionExample
 
         private Vector2 position = new Vector2(200, 960);
 
-        public Vector2 Position => position;
+        public Vector2 Position
+        {
+            get => position;
+            set => position = value;
+        }
+
+        
 
         private bool flipped;
 
@@ -42,7 +48,15 @@ namespace CollisionExample
         private double animationTimer = 0;
         private const double ANIMATION_SPEED = .2;
 
-        private BoundingRectangle bounds = new BoundingRectangle(new Vector2(32,29), 124, 124);
+        public void SetPosition(Vector2 newPosition)
+        {
+            position = newPosition;
+            _velocity = Vector2.Zero;
+            bounds.X = position.X - 50;
+            bounds.Y = position.Y - 40;
+        }
+
+        public BoundingRectangle bounds = new BoundingRectangle(new Vector2(32,29), 124, 124);
         /// <summary>
         /// color overlay of the ghost
         /// </summary>
@@ -201,9 +215,6 @@ namespace CollisionExample
             var source = new Rectangle(currentFrame * 60 + 6, 0, 57, 64);
             
             spriteBatch.Draw(texture, position, source, Color, 0, new Vector2(32, 32), 3f, spriteEffects, 0);
-        }
-
-
-        
+        }   
     }
 }
