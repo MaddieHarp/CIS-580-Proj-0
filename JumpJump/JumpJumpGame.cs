@@ -31,6 +31,7 @@ namespace JumpJump
         private int applesLeft = 7;
         private SoundEffect eatSound;
         private JumpJumpSprite jumpjump;
+        private Texture2D pixel;
         private SpriteFont spriteFont;
         private bool onTitleScreen = true;
         private int currentLevel = 1;
@@ -39,6 +40,10 @@ namespace JumpJump
         private Tilemap tilemap;
 
         private TitleScreenText titleText;
+
+        private StartButton startButton;
+        private EndButton endButton;
+        private ResumeButton resumeButton;
 
         private List<BoundingRectangle> solids = new List<BoundingRectangle>();
 
@@ -62,12 +67,22 @@ namespace JumpJump
             hasSave = SaveData.Exists();
             saveData = SaveData.Load();
 
-          //  platforms = new PlatformSprite[7];
-          //  apples = new AppleSprite[7];
-            
+            startButton = new StartButton("startbutton", new Vector2(750, 500), StartNewGame, 0.7f);
+            endButton = new EndButton("exitbutton", new Vector2(750, 800), Exit, 0.7f);
+            resumeButton = new ResumeButton("resumebutton", new Vector2(750, 650), ResumeGame, 0.7f);
+            var inset = new Point(47, 86);
+            startButton.Inset  = inset;
+            endButton.Inset    = inset;
+            resumeButton.Inset = inset;
+            if (!hasSave)
+            {
+                resumeButton.NormalColor = Color.Gray;
+                resumeButton.HoverColor = Color.Gray;
+            }
+
             jumpjump = new JumpJumpSprite();
-            lilJump = new liljumpSprite(new Vector2(1700, 931));
-            exitPortal = new portalSprite(new Vector2(1760, 840));
+            lilJump = new liljumpSprite(new Vector2(1700, 855));
+            exitPortal = new portalSprite(new Vector2(1760, 750));
             ground = new GroundSprite(new Vector2(0, 1030));
             titleText = new TitleScreenText("titletext", new Vector2(960, 300));
             
@@ -83,8 +98,16 @@ namespace JumpJump
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            startButton.LoadContent(Content);
+            endButton.LoadContent(Content);
+            resumeButton.LoadContent(Content);
+            pixel = new Texture2D(GraphicsDevice, 1, 1);
+            pixel.SetData(new[] { Color.White });
+
             tilemap = new Tilemap("Content/level1.tmx", "platformTile", "ground3");
             tilemap.LoadContent(Content);
+
+
 
             applePoints = tilemap.GetPoints("AppleLayer", "apple");
             foreach (Vector2 a in applePoints)
@@ -95,6 +118,8 @@ namespace JumpJump
             applesLeft = apples.Count;
 
             foreach (var apple in apples) apple.LoadContent(Content);
+
+            
 
             solids.AddRange(tilemap.GetTileColliders());
 
@@ -107,12 +132,11 @@ namespace JumpJump
             background = Content.Load<Texture2D>("background");
             eatSound = Content.Load<SoundEffect>("eating");
             backgroundMusic = Content.Load<Song>("backgroundMusic");
-            titleScreenTexture = Content.Load<Texture2D>("titlescreen");
+            titleScreenTexture = Content.Load<Texture2D>("background");
             titleText.LoadContent(Content);
 
 
             hell.LoadContent(Content);
-            if (hasSave) ApplySave();
             
             MediaPlayer.Play(backgroundMusic);
             MediaPlayer.IsRepeating = true;
@@ -127,7 +151,9 @@ namespace JumpJump
             if (onTitleScreen)
             {
                 titleText.Update(gameTime);
-                if (Keyboard.GetState().IsKeyDown(Keys.E)) onTitleScreen = false;
+                startButton.Update(gameTime);
+                endButton.Update(gameTime);
+                resumeButton.Update(gameTime);
                 base.Update(gameTime);
                 return;
             }
@@ -187,6 +213,9 @@ namespace JumpJump
             {
                 spriteBatch.Draw(titleScreenTexture, new Rectangle(0, 0, 1920, 1080), Color.White);
                 titleText.Draw(spriteBatch);
+                startButton.Draw(spriteBatch);
+                endButton.Draw(spriteBatch);
+                resumeButton.Draw(spriteBatch);
             }
             else if (currentLevel == 1)
             {
@@ -218,6 +247,20 @@ namespace JumpJump
 
             spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        private void StartNewGame()
+        {
+            onTitleScreen = false;
+            SaveGame();
+        }
+
+        private void ResumeGame()
+        {
+            if (!hasSave) return;
+
+            ApplySave();
+            onTitleScreen = false;
         }
 
         private void ApplySave()

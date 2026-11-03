@@ -14,7 +14,8 @@ namespace JumpJump
         public float PlayerY { get; set; }
 
         // One entry per coin, in the same order as the coins array
-        public bool[] CollectedApples { get; set; } = new bool[7];
+        // One entry per apple, in the same order as the apples list
+        public bool[] CollectedApples { get; set; } = Array.Empty<bool>();
 
         public bool MetLilJump { get; set; }
 
@@ -45,9 +46,7 @@ namespace JumpJump
                     var data = JsonSerializer.Deserialize<SaveData>(File.ReadAllText(SavePath));
                     if (data != null)
                     {
-                        // guard against a save with the wrong number of coins
-                        if (data.CollectedApples == null || data.CollectedApples.Length != 7)
-                            data.CollectedApples = new bool[7];
+                        data.CollectedApples ??= Array.Empty<bool>();
                         return data;
                     }
                 }
