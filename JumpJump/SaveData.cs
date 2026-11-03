@@ -9,15 +9,12 @@ namespace JumpJump
         // Bump this if you change the format later so old saves can be migrated
         public int Version { get; set; } = 1;
 
-        // Seed for the random platform/coin layout, so it's identical on reload
-        public int Seed { get; set; }
-
         public int Level { get; set; } = 1;
         public float PlayerX { get; set; }
         public float PlayerY { get; set; }
 
         // One entry per coin, in the same order as the coins array
-        public bool[] CollectedCoins { get; set; } = new bool[7];
+        public bool[] CollectedApples { get; set; } = new bool[7];
 
         public bool MetLilJump { get; set; }
 
@@ -49,8 +46,8 @@ namespace JumpJump
                     if (data != null)
                     {
                         // guard against a save with the wrong number of coins
-                        if (data.CollectedCoins == null || data.CollectedCoins.Length != 7)
-                            data.CollectedCoins = new bool[7];
+                        if (data.CollectedApples == null || data.CollectedApples.Length != 7)
+                            data.CollectedApples = new bool[7];
                         return data;
                     }
                 }

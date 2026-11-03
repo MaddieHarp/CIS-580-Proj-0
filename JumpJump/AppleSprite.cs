@@ -11,7 +11,7 @@ using JumpJump.Collisions;
 namespace JumpJump
 {
 
-    public class CoinSprite
+    public class AppleSprite
     {
 
 
@@ -31,10 +31,10 @@ namespace JumpJump
         public bool Collected{get; set;} = false;
 
         /// <summary>
-        /// Creates a new coin sprite
+        /// Creates a new apple sprite
         /// </summary>
         /// <param name="position">The position of the sprite in the game</param>
-        public CoinSprite(Vector2 position)
+        public AppleSprite(Vector2 position)
         {
             this.position = position;
             this.bounds = new BoundingCircle(position + new Vector2(-8,-8), 31);

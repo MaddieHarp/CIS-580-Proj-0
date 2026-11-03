@@ -15,7 +15,7 @@ namespace JumpJump
     /// <summary>
     /// A class representing a slime ghost
     /// </summary>
-    public class SlimeGhostSprite
+    public class JumpJumpSprite
     {
         private const float GRAVITY = 5000f;
         private const float SPEED = 750f;
@@ -121,7 +121,7 @@ namespace JumpJump
 
         }
 
-        public void Update(GameTime gameTime, List<PlatformSprite> platforms, GroundSprite ground)
+        public void Update(GameTime gameTime, List<BoundingRectangle> platforms, GroundSprite ground)
         {
             UpdateVelocity(gameTime);
             position += _velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -132,9 +132,9 @@ namespace JumpJump
 
             foreach (var platform in platforms)
             {
-                if (bounds.CollidesWith(platform.Bounds))
+                if (bounds.CollidesWith(platform))
                 {
-                    ResolveCollision(platform.Bounds);
+                    ResolveCollision(platform);
                 }
             }
             if (bounds.CollidesWith(ground.Bounds))

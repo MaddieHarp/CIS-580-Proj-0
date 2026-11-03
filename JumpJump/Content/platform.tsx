@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.10" tiledversion="1.12.2" name="platform" tilewidth="32" tileheight="32" tilecount="4" columns="2">
- <image source="../../../../../Downloads/image.png" width="64" height="64"/>
+ <image source="platformTile.png" width="64" height="64"/>
  <tile id="0">
   <objectgroup draworder="index" id="3">
    <object id="2" name="platform" x="0.0434783" y="11" width="31.9604" height="11"/>

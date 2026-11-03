@@ -22,9 +22,9 @@ public class hellLevel
     private firewheelSprite[] fireWheels;
 
     private Texture2D parallaxBackground;
-    private SlimeGhostSprite player;
+    private JumpJumpSprite player;
 
-    public hellLevel(SlimeGhostSprite player)
+    public hellLevel(JumpJumpSprite player)
     {
         this.player = player;
         fireWheels = new firewheelSprite[WHEEL_COUNT];

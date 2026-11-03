@@ -40,29 +40,29 @@
 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
 </data>
  </layer>
- <objectgroup id="2" name="Object Layer 1">
-  <object id="2" name="apple" x="192.333" y="776.667">
+ <objectgroup id="2" name="AppleLayer">
+  <object id="2" name="apple" x="224.333" y="765.667">
    <point/>
   </object>
-  <object id="3" name="apple" x="320.273" y="491.091">
+  <object id="3" name="apple" x="352.273" y="480.091">
    <point/>
   </object>
-  <object id="4" name="apple" x="704.5" y="618.5">
+  <object id="4" name="apple" x="736.5" y="607.5">
    <point/>
   </object>
-  <object id="5" name="apple" x="1185" y="810.667">
+  <object id="5" name="apple" x="1217" y="799.667">
    <point/>
   </object>
-  <object id="6" name="apple" x="1664.75" y="650.75">
+  <object id="6" name="apple" x="1696.75" y="639.75">
    <point/>
   </object>
-  <object id="7" name="apple" x="1408.13" y="394.542">
+  <object id="7" name="apple" x="1440.13" y="383.542">
    <point/>
   </object>
-  <object id="8" name="apple" x="1055.96" y="234.881">
+  <object id="8" name="apple" x="1087.96" y="223.881">
    <point/>
   </object>
-  <object id="9" name="apple" x="640.25" y="138.875">
+  <object id="9" name="apple" x="672.25" y="127.875">
    <point/>
   </object>
  </objectgroup>

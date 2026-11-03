@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -11,31 +12,57 @@ namespace JumpJump;
 public class Tilemap
 {
     private readonly string _mapFile;
-    private readonly string _textureName;
+    private readonly string[] _textureNames;
 
     private TiledMap _map;
-    private TiledTileset _tileset;
-    private Texture2D _texture;
+
+    // Keyed by each tileset's firstgid so we can look one up directly from a tile's gid
+    private readonly Dictionary<int, TilesetData> _tilesets = new();
+
+    private class TilesetData
+    {
+        public TiledTileset Tileset;
+        public Texture2D Texture;
+    }
 
     public int WidthInPixels => _map.Width * _map.TileWidth;
     public int HeightInPixels => _map.Height * _map.TileHeight;
 
     /// <param name="mapFile">Path to the TMX, e.g. "Content/test.tmx"</param>
-    /// <param name="textureName">Content pipeline asset name of the tileset PNG, e.g. "tileset"</param>
-    public Tilemap(string mapFile, string textureName)
+    /// <param name="textureNames">
+    /// Content pipeline asset names of the tileset PNGs, in the same order the
+    /// tilesets appear in the TMX, e.g. "tileset", "props", "terrain"
+    /// </param>
+    public Tilemap(string mapFile, params string[] textureNames)
     {
         _mapFile = mapFile;
-        _textureName = textureName;
+        _textureNames = textureNames;
     }
 
     public void LoadContent(ContentManager content)
     {
         _map = new TiledMap(_mapFile);
 
-        string tsxPath = Path.Combine(Path.GetDirectoryName(_mapFile), _map.Tilesets[0].source);
-        _tileset = new TiledTileset(tsxPath);
+        if (_map.Tilesets.Length != _textureNames.Length)
+        {
+            throw new InvalidOperationException(
+                $"Map '{_mapFile}' has {_map.Tilesets.Length} tileset(s) but " +
+                $"{_textureNames.Length} texture name(s) were provided.");
+        }
 
-        _texture = content.Load<Texture2D>(_textureName);
+        string mapDir = Path.GetDirectoryName(_mapFile);
+
+        for (int i = 0; i < _map.Tilesets.Length; i++)
+        {
+            var mapTileset = _map.Tilesets[i];
+            string tsxPath = Path.Combine(mapDir, mapTileset.source);
+
+            _tilesets[mapTileset.firstgid] = new TilesetData
+            {
+                Tileset = new TiledTileset(tsxPath),
+                Texture = content.Load<Texture2D>(_textureNames[i])
+            };
+        }
     }
 
     public void Draw(SpriteBatch spriteBatch)
@@ -50,14 +77,15 @@ public class Tilemap
                 if (gid == 0) continue;
 
                 var mapTileset = _map.GetTiledMapTileset(gid);
-                var rect = _map.GetSourceRect(mapTileset, _tileset, gid);
+                var data = _tilesets[mapTileset.firstgid];
+                var rect = _map.GetSourceRect(mapTileset, data.Tileset, gid);
 
                 var source = new Rectangle(rect.x, rect.y, rect.width, rect.height);
                 var position = new Vector2(
                     (i % layer.width) * _map.TileWidth,
                     (i / layer.width) * _map.TileHeight);
 
-                spriteBatch.Draw(_texture, position, source, Color.White);
+                spriteBatch.Draw(data.Texture, position, source, Color.White);
             }
         }
     }
@@ -68,7 +96,7 @@ public class Tilemap
 
         foreach (var layer in _map.Layers)
         {
-            if (layer.type != TiledLayerType.ObjectLayer || layer.name != layerName) continue; //checking for object layers and correct layer name, if not then skips layer
+            if (layer.type != TiledLayerType.ObjectLayer || layer.name != layerName) continue;
 
             foreach (var obj in layer.objects)
             {
@@ -87,16 +115,15 @@ public class Tilemap
         return result;
     }
 
-
     public List<Vector2> GetPoints(string layerName, string objectName)
     {
         var result = new List<Vector2>();
 
         foreach (var layer in _map.Layers)
         {
-           if (layer.type != TiledLayerType.ObjectLayer || layer.name != layerName) continue; //checking for object layers and correct layer name, if not then skips layer 
+            if (layer.type != TiledLayerType.ObjectLayer || layer.name != layerName) continue;
 
-           foreach (var obj in layer.objects)
+            foreach (var obj in layer.objects)
             {
                 if (obj.name != objectName) continue;
 
@@ -104,6 +131,42 @@ public class Tilemap
             }
         }
 
+        return result;
+    }
+
+    public List<BoundingRectangle> GetTileColliders(string layerName = null)
+    {
+        var result = new List<BoundingRectangle>();
+
+        foreach (var layer in _map.Layers)
+        {
+            if (layer.type != TiledLayerType.TileLayer) continue;
+            if (layerName != null && layer.name != layerName) continue;
+
+            for (int i = 0; i < layer.data.Length; i++)
+            {
+                int gid = layer.data[i];
+                if (gid == 0) continue;
+
+                var mapTileset = _map.GetTiledMapTileset(gid);
+                var data = _tilesets[mapTileset.firstgid];
+                var tile = _map.GetTiledTile(mapTileset, data.Tileset, gid);
+
+                if (tile?.objects == null) continue;
+
+                float tileX = (i % layer.width) * _map.TileWidth;
+                float tileY = (i / layer.width) * _map.TileHeight;
+
+                foreach (var obj in tile.objects)
+                {
+                    result.Add(new BoundingRectangle(
+                        tileX + obj.x,
+                        tileY + obj.y,
+                        obj.width,
+                        obj.height));
+                }
+            }
+        }
         return result;
     }
 }
