@@ -62,13 +62,7 @@
 /processorParam:Quality=Best
 /build:backgroundMusic.wav
 
-#begin eating.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:eating.wav
-
-#begin exitbutton.png
+#begin bullet.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -78,7 +72,25 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:exitbutton.png
+/build:bullet.png
+
+#begin dialogBox.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:dialogBox.png
+
+#begin eating.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:eating.wav
 
 #begin exitbutton.png
 /importer:TextureImporter
@@ -241,6 +253,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:resumebutton.png
+
+#begin speechbubble.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:speechbubble.png
 
 #begin startbutton.png
 /importer:TextureImporter

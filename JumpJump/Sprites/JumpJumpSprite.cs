@@ -21,6 +21,13 @@ namespace JumpJump
         private const float SPEED = 750f;
         private const float JUMP = 1500f;
 
+        public const int maxhealth = 5;
+        private const float INVULN_TIME = 1f;   
+        private float invulnTimer;
+
+        public int Health { get; private set; } = maxhealth;
+        public bool IsDead => Health <= 0;
+
         private SoundEffect jumpSound;
 
         private bool wasJumpKeyDown = false;
@@ -40,7 +47,7 @@ namespace JumpJump
 
         
 
-        private bool flipped;
+        public bool flipped;
 
         private bool jump;
 
@@ -66,6 +73,13 @@ namespace JumpJump
         /// bounding volume of sprite
         /// </summary>
         public BoundingRectangle Bounds => bounds;
+
+        public void TakeDamage(int amount)
+        {
+            if (invulnTimer > 0 || IsDead) return;
+            Health -= amount;
+            invulnTimer = INVULN_TIME;
+        }
 
         /// <summary>
         /// Loads the sprite texture using the provided ContentManager
@@ -121,8 +135,9 @@ namespace JumpJump
 
         }
 
-        public void Update(GameTime gameTime, List<BoundingRectangle> platforms, GroundSprite ground)
+        public void Update(GameTime gameTime, List<BoundingRectangle> solids, GroundSprite ground)
         {
+            if (invulnTimer > 0) invulnTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
             UpdateVelocity(gameTime);
             position += _velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
             bounds.X = position.X - 50;
@@ -130,11 +145,11 @@ namespace JumpJump
 
             _OnGround = false;
 
-            foreach (var platform in platforms)
+            foreach (var solid in solids)
             {
-                if (bounds.CollidesWith(platform))
+                if (bounds.CollidesWith(solid))
                 {
-                    ResolveCollision(platform);
+                    ResolveCollision(solid);
                 }
             }
             if (bounds.CollidesWith(ground.Bounds))
@@ -211,10 +226,12 @@ namespace JumpJump
         public void Draw(SpriteBatch spriteBatch)
         {
             SpriteEffects spriteEffects = (flipped) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            // Multiply currentFrame by 64 to shift the X position of the rectangle to the correct image
             var source = new Rectangle(currentFrame * 60 + 6, 0, 57, 64);
             
-            spriteBatch.Draw(texture, position, source, Color, 0, new Vector2(32, 32), 3f, spriteEffects, 0);
+            spriteBatch.Draw(texture, position, source, Color.PaleVioletRed, 0, new Vector2(32, 32), 3f, spriteEffects, 0);
+            bool hidden = invulnTimer > 0 && ((int)(invulnTimer * 10) % 2 == 0);
+            if (!hidden)
+                spriteBatch.Draw(texture, position, source, Color, 0, new Vector2(32, 32), 3f, spriteEffects, 0);
         }   
     }
 }

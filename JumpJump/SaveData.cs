@@ -34,7 +34,7 @@ namespace JumpJump
                 File.WriteAllText(tmp, JsonSerializer.Serialize(this));
                 File.Move(tmp, SavePath, overwrite: true); // avoids a half-written file if the game crashes mid-save
             }
-            catch (Exception) { /* don't let a failed save crash the game */ }
+            catch (Exception) { }
         }
 
         public static SaveData Load()
