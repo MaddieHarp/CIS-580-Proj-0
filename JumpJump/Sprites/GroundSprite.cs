@@ -8,7 +8,7 @@ namespace JumpJump
 {
     public class GroundSprite
     {
-        private Vector2 position;
+        public Vector2 position;
         private Texture2D texture;
         private BoundingRectangle bounds;
 

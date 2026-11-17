@@ -21,6 +21,9 @@ namespace JumpJump
         private const float SPEED = 750f;
         private const float JUMP = 1500f;
 
+        private const int MAX_JUMPS = 2;
+        private int jumpsUsed = 0;
+
         public const int maxhealth = 5;
         private const float INVULN_TIME = 1f;   
         private float invulnTimer;
@@ -35,9 +38,9 @@ namespace JumpJump
         private Vector2 _velocity;
         private KeyboardState keyboardState;
 
-        private Texture2D texture;
+        public Texture2D texture;
 
-        private Vector2 position = new Vector2(200, 960);
+        private Vector2 position = new Vector2(200, 877);
 
         public Vector2 Position
         {
@@ -53,7 +56,11 @@ namespace JumpJump
 
         private int currentFrame = 0;
         private double animationTimer = 0;
-        private const double ANIMATION_SPEED = .2;
+
+        private const int FRAME_W = 80;
+        private const int FRAME_H = 60;
+        private const int FRAME_COUNT = 5;
+        private const double WALK_FRAME_TIME = 0.1;
 
         public void SetPosition(Vector2 newPosition)
         {
@@ -63,7 +70,7 @@ namespace JumpJump
             bounds.Y = position.Y - 40;
         }
 
-        public BoundingRectangle bounds = new BoundingRectangle(new Vector2(32,29), 124, 124);
+        public BoundingRectangle bounds = new BoundingRectangle(new Vector2(32,29), 80, 130);
         /// <summary>
         /// color overlay of the ghost
         /// </summary>
@@ -88,7 +95,10 @@ namespace JumpJump
         public void LoadContent(ContentManager content)
         {
             jumpSound = content.Load<SoundEffect>("jumpSound");
-            texture = content.Load<Texture2D>("kangroo");
+            texture = content.Load<Texture2D>("kangarooplain");
+
+     //       pixel = new Texture2D(texture.GraphicsDevice, 1, 1);
+       //     pixel.SetData(new[] { Color.Red });
         }
         /// <summary>
         /// followed tutorial: https://www.youtube.com/watch?v=HujUFaqh-D8
@@ -123,12 +133,20 @@ namespace JumpJump
 
             if (jumpKeyDown && !wasJumpKeyDown)
             {
-                _velocity.Y = -JUMP;
-                _OnGround = false;
-                jump = true;
-                currentFrame = 1;
-                animationTimer = 0;
-                jumpSound.Play();
+                if (_wasJumping && jumpsUsed == 0)
+                    jumpsUsed = 1;
+
+                if (jumpsUsed < MAX_JUMPS)
+                {
+                    _velocity.Y = -JUMP;
+                    _OnGround = false;
+                    jump = true;
+                    jumpsUsed++;
+                    jumpSound.Play();
+
+                    currentFrame = 0;
+                    animationTimer = 0;
+                }
             }
 
             wasJumpKeyDown = jumpKeyDown; 
@@ -156,24 +174,39 @@ namespace JumpJump
             {
                 ResolveCollision(ground.Bounds);
             }
+            UpdateAnimation(gameTime);
+        }
 
+        private const double JUMP_FRAME_TIME = 0.05;
+        private bool _wasJumping;
+
+        private void UpdateAnimation(GameTime gameTime)
+        {
             if (jump)
             {
-                if (currentFrame == 0) 
+                if (!_wasJumping)
                 {
-                    currentFrame = 1; 
+                    currentFrame = 0;
                     animationTimer = 0;
                 }
 
-                if (currentFrame < 2)
+                if (currentFrame < FRAME_COUNT - 1)
                 {
                     animationTimer += gameTime.ElapsedGameTime.TotalSeconds;
-                    
-                    if (animationTimer >= ANIMATION_SPEED)
+                    if (animationTimer >= JUMP_FRAME_TIME)
                     {
-                        currentFrame++; 
-                        animationTimer = 0; 
+                        animationTimer -= JUMP_FRAME_TIME;
+                        currentFrame++;
                     }
+                }
+            }
+            else if (_velocity.X != 0)                  
+            {
+                animationTimer += gameTime.ElapsedGameTime.TotalSeconds;
+                if (animationTimer >= WALK_FRAME_TIME)
+                {
+                    animationTimer -= WALK_FRAME_TIME;
+                    currentFrame = (currentFrame + 1) % FRAME_COUNT;
                 }
             }
             else
@@ -181,6 +214,8 @@ namespace JumpJump
                 currentFrame = 0;
                 animationTimer = 0;
             }
+
+            _wasJumping = jump;
         }
 
         private void ResolveCollision(BoundingRectangle other)
@@ -203,8 +238,8 @@ namespace JumpJump
                 {
                     position.Y -= overlapY;
                     _OnGround = true;
-
                     jump = false;
+                    jumpsUsed = 0; 
                 }
                 else
                 {
@@ -226,12 +261,13 @@ namespace JumpJump
         public void Draw(SpriteBatch spriteBatch)
         {
             SpriteEffects spriteEffects = (flipped) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            var source = new Rectangle(currentFrame * 60 + 6, 0, 57, 64);
-            
-            spriteBatch.Draw(texture, position, source, Color.PaleVioletRed, 0, new Vector2(32, 32), 3f, spriteEffects, 0);
+            var source = new Rectangle(currentFrame * FRAME_W, 0, FRAME_W, FRAME_H);
+            var origin = new Vector2(FRAME_W / 2f, FRAME_H / 2f);
+
+            spriteBatch.Draw(texture, position, source, Color.PaleVioletRed, 0, origin, 3f, spriteEffects, 0);
             bool hidden = invulnTimer > 0 && ((int)(invulnTimer * 10) % 2 == 0);
             if (!hidden)
-                spriteBatch.Draw(texture, position, source, Color, 0, new Vector2(32, 32), 3f, spriteEffects, 0);
+                spriteBatch.Draw(texture, position, source, Color, 0, origin, 3f, spriteEffects, 0);
         }   
     }
 }

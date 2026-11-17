@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using JumpJump.Collisions;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Media;
 
 namespace JumpJump;
 
@@ -18,7 +19,6 @@ public class HellScreen : GameScreen, ISaveableScreen
 
     private readonly List<Bullet> _bullets = new List<Bullet>();
     private Texture2D _pixel;
-    private KeyboardState _prevKeys;
 
     private const float FIRE_COOLDOWN = 0.5f; 
     private float _fireTimer = 0f;
@@ -31,10 +31,14 @@ public class HellScreen : GameScreen, ISaveableScreen
     public override void Activate()
     {
         var content = ScreenManager.Game.Content;
+        Song backgroundMusic = content.Load<Song>("hell_backtrack");
+        MediaPlayer.Play(backgroundMusic);
+        MediaPlayer.IsRepeating = true;
+        MediaPlayer.Volume = .1f;
 
         _jumpjump = new JumpJumpSprite();
         _ground = new GroundSprite(new Vector2(0, 1030));
-        _hell = new hellLevel(_jumpjump);
+        _hell = new hellLevel(_jumpjump, _ground, _save);
 
         _jumpjump.LoadContent(content);
         _ground.LoadContent(content);
@@ -55,11 +59,12 @@ public class HellScreen : GameScreen, ISaveableScreen
     {
         new SaveData
         {
-            Level = 2,
+            Level = 3,
             PlayerX = _jumpjump.Position.X,
             PlayerY = _jumpjump.Position.Y,
             CollectedApples = Array.Empty<bool>(),
-            MetLilJump = true
+            MetLilJump = true,
+            StartDialog = true
         }.Save();
     }
 
@@ -84,7 +89,7 @@ public class HellScreen : GameScreen, ISaveableScreen
         var keys = Keyboard.GetState();
         _fireTimer -= dt;
 
-        if (keys.IsKeyDown(Keys.K) && _fireTimer <= 0f)
+        if ((keys.IsKeyDown(Keys.K) || Mouse.GetState().LeftButton == ButtonState.Pressed) && _fireTimer <= 0f)
         {
             float x = _jumpjump.flipped ? _jumpjump.Bounds.Left - 24 : _jumpjump.Bounds.Right;
             float y = _jumpjump.Bounds.Y + 50;
@@ -102,6 +107,7 @@ public class HellScreen : GameScreen, ISaveableScreen
                 if (b.Alive && !k.IsDead && b.Bounds.CollidesWith(k.Bounds))
                 {
                     k.TakeDamage(1);
+                    k.Color = Color.White;
                     b.Alive = false;
                 }
             }
@@ -122,6 +128,14 @@ public class HellScreen : GameScreen, ISaveableScreen
             ScreenManager.AddScreen(new TitleScreen());
             return;
             
+        }
+
+        if (_hell.change)
+        {
+            MediaPlayer.Stop();                                  // stop the hell music
+            ScreenManager.AddScreen(new Level2Screen(null));     // or new Level2Screen(null)
+            ExitScreen();
+            return;
         }
     }
 

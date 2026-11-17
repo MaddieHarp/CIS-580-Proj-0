@@ -19,6 +19,8 @@ namespace JumpJump
 
         public bool MetLilJump { get; set; }
 
+        public bool StartDialog {get;set;}
+
         private static readonly string SavePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "JumpJump", "save.json");

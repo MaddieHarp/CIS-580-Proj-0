@@ -1,22 +1,28 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Media;
+using System;
 
 namespace JumpJump;
 
 public class TitleScreen : GameScreen
 {
-    Crate crate;
     private Texture2D _background;
     private TitleScreenText _titleText;
     private StartButton _startButton;
     private EndButton _endButton;
     private ResumeButton _resumeButton;
+    private Song backgroundMusic;
 
     private SaveData _saveData;
     private bool _hasSave;
 
     public override void Activate()
     {
+        backgroundMusic = ScreenManager.Game.Content.Load<Song>("backgroundMusic");
+        MediaPlayer.Play(backgroundMusic);
+        MediaPlayer.IsRepeating = true;
+        MediaPlayer.Volume = .1f;
         var content = ScreenManager.Game.Content;
 
         _hasSave = SaveData.Exists();
@@ -25,11 +31,6 @@ public class TitleScreen : GameScreen
         _startButton = new StartButton("startbutton", new Vector2(750, 500), StartNewGame, 0.7f);
         _endButton = new EndButton("exitbutton", new Vector2(750, 800), ScreenManager.Game.Exit, 0.7f);
         _resumeButton = new ResumeButton("resumebutton", new Vector2(750, 650), ResumeGame, 0.7f);
-        crate = new Crate(ScreenManager.Game, CrateType.Slats);
-        Vector3 camPos = new Vector3(8, 9, 12);
-Vector3 right = Vector3.Normalize(Vector3.Cross(Vector3.Zero - camPos, Vector3.Up));
-
-crate.Position = right * -8f;   // positive = toward screen right, negative = left
 
         var inset = new Point(47, 86);
         _startButton.Inset = inset;
@@ -76,12 +77,11 @@ crate.Position = right * -8f;   // positive = toward screen right, negative = le
         _endButton.Draw(sb);
         _resumeButton.Draw(sb);
         sb.End();
-
-        crate.Draw();
     }
 
     private void StartNewGame()
     {
+        SaveData.Delete();
         ScreenManager.AddScreen(new Level1Screen(null));
         ExitScreen();
     }

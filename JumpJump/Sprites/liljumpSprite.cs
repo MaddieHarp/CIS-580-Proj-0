@@ -20,7 +20,7 @@ namespace JumpJump
             
             // Multiply his exact dimensions (36 width, 33 height) by the scale
             // so the invisible collision box grows perfectly with the drawing!
-            Bounds = new BoundingRectangle(position, 36f * scale, 33f * scale);
+            Bounds = new BoundingRectangle(position, 1f * scale, 33f * scale);
         }
 
         public void LoadContent(ContentManager content)
@@ -30,7 +30,6 @@ namespace JumpJump
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            // Use the extended Draw method to apply the scale visually
             spriteBatch.Draw(
                 texture, 
                 Position, 
@@ -38,7 +37,7 @@ namespace JumpJump
                 Color.White, 
                 0f, 
                 Vector2.Zero, 
-                scale, // This stretches the image by our multiplier
+                scale,
                 SpriteEffects.None, 
                 0f
             );

@@ -11,7 +11,6 @@ public class JumpJumpGame : Game
 {
     private GraphicsDeviceManager graphics;
     private ScreenManager screenManager;
-    private Song backgroundMusic;
 
     public JumpJumpGame()
     {
@@ -30,10 +29,6 @@ public class JumpJumpGame : Game
 
     protected override void LoadContent()
     {
-        backgroundMusic = Content.Load<Song>("backgroundMusic");
-        MediaPlayer.Play(backgroundMusic);
-        MediaPlayer.IsRepeating = true;
-        MediaPlayer.Volume = .1f;
     }
 
     protected override void Update(GameTime gameTime)

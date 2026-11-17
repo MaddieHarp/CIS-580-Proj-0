@@ -12,22 +12,24 @@ namespace JumpJump
         public bool IsActive { get; set; } = false;
 
         private Texture2D portalTexture;
-        
-        // Add a scale multiplier. 2f makes it twice as big!
+        private string texture;
         private float scale = 3f; 
 
-        public portalSprite(Vector2 position)
+        private const float BOUNDS_OFFSET_X = 70f;   // pixels to shift right
+
+        public portalSprite(Vector2 position, string texture)
         {
             Position = position;
-            
-            // Multiply the original 28x65 dimensions by the scale 
-            // so the physics box matches the new visual size
-            Bounds = new BoundingRectangle(position, 28f * scale, 65f * scale);
+            this.texture = texture;
+
+            Bounds = new BoundingRectangle(
+                new Vector2(position.X + BOUNDS_OFFSET_X, position.Y),
+                28f * scale, 65f * scale);
         }
 
         public void LoadContent(ContentManager content)
         {
-            portalTexture = content.Load<Texture2D>("portal"); 
+            portalTexture = content.Load<Texture2D>(texture); 
         }
 
         public void Update(GameTime gameTime)

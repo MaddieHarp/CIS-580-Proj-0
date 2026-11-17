@@ -14,8 +14,15 @@ namespace JumpJump
         public int Health { get; private set; } = MAX_HEALTH;
         public bool IsDead => Health <= 0;
         public bool TouchingPlayer { get; private set; }
+        private const float INVULN_TIME = .3f;   
+        private float invulnTimer;
 
-        public void TakeDamage(int amount) => Health -= amount;
+        public void TakeDamage(int amount)
+        {
+            if (invulnTimer > 0 || IsDead) return;
+            Health -= amount;
+            invulnTimer = INVULN_TIME;
+        }
 
         public void Respawn(float x)
         {
@@ -66,6 +73,10 @@ namespace JumpJump
 
         public void Update(GameTime gameTime, float targetX, BoundingRectangle playerBounds, IEnumerable<hellKanagrooSprite> others)
         {
+            if (invulnTimer > 0)
+            {
+                invulnTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             float step = speed * dt;
@@ -104,8 +115,11 @@ namespace JumpJump
             else{
                 flip = SpriteEffects.None;
             }
-            
-            spriteBatch.Draw(texture, position, source, Color.Red, 0, new Vector2(32, 32), 3f, flip, 0);
+
+            spriteBatch.Draw(texture, position, source, Color.White, 0, new Vector2(32, 32), 3f, flip, 0);
+            bool hidden = invulnTimer > 0 && ((int)(invulnTimer * 10) % 2 == 0);
+            if (!hidden)
+                spriteBatch.Draw(texture, position, source, Color.Red, 0, new Vector2(32, 32), 3f, flip, 0);
 
         }
     }

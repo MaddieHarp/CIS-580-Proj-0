@@ -14,15 +14,19 @@ public class Level1Screen : GameScreen, ISaveableScreen
     private Texture2D _background;
     private SpriteFont _spriteFont;
     private SoundEffect _eatSound;
+    private SoundEffect _collectSound;
+    private SoundEffect _gunSound;
+
+    private SoundEffect _portalSound;
 
     private JumpJumpSprite _jumpjump;
     private liljumpSprite _lilJump;
     private Texture2D _jumpPortrait;
     private Texture2D _lilJumpPortrait;
     private bool _dialogueStarted;
-    private SpeechBubble speechBubble;
     private portalSprite _exitPortal;
     private particleEffect _portalExplosion;
+    private particleEffect _changeExplo;
     private GroundSprite _ground;
     private Tilemap _tilemap;
 
@@ -32,6 +36,12 @@ public class Level1Screen : GameScreen, ISaveableScreen
     private int _applesLeft;
     private bool _metLilJump;
     private bool _lilJumpGone;
+
+    private bool introstarted = false;
+
+
+    private float _swapTimer;
+    private const float SWAP_DELAY = .6f; 
 
     public Level1Screen(SaveData save)
     {
@@ -45,13 +55,14 @@ public class Level1Screen : GameScreen, ISaveableScreen
 
         _jumpjump = new JumpJumpSprite();
         _lilJump = new liljumpSprite(new Vector2(1600, 855));
-        _exitPortal = new portalSprite(new Vector2(1760, 750));
+        _exitPortal = new portalSprite(new Vector2(1760, 750), "portal");
         _ground = new GroundSprite(new Vector2(0, 1030));
-        speechBubble = new SpeechBubble(new Vector2(1500, 800),"test", false);
 
-        _portalExplosion = new particleEffect(game, 5000);
+        _portalExplosion = new particleEffect(game, 10000, Color.Red);
+        _changeExplo = new particleEffect(game, 100000, Color.White);
         _portalExplosion.DrawOrder = 100;
         game.Components.Add(_portalExplosion);
+        game.Components.Add(_changeExplo);
 
         _tilemap = new Tilemap("Content/level1.tmx", "platformTile", "ground3");
         _tilemap.LoadContent(content);
@@ -67,13 +78,15 @@ public class Level1Screen : GameScreen, ISaveableScreen
         _exitPortal.LoadContent(content);
         _ground.LoadContent(content);
         _jumpjump.LoadContent(content);
-        speechBubble.LoadContent(content);
-        _jumpPortrait = content.Load<Texture2D>("kangroo");
+        _jumpPortrait = content.Load<Texture2D>("kangarooplain");
         _lilJumpPortrait = content.Load<Texture2D>("liljump");
 
         _spriteFont = content.Load<SpriteFont>("arial");
         _background = content.Load<Texture2D>("background");
         _eatSound = content.Load<SoundEffect>("eating");
+        _gunSound = content.Load<SoundEffect>("gun_reload");
+        _portalSound = content.Load<SoundEffect>("portal_open");
+        _collectSound = content.Load<SoundEffect>("apple_pickup");
 
         if (_save != null)
         {
@@ -88,6 +101,7 @@ public class Level1Screen : GameScreen, ISaveableScreen
     public override void Unload()
     {
         ScreenManager.Game.Components.Remove(_portalExplosion);
+        ScreenManager.Game.Components.Remove(_changeExplo);
     }
 
     private void ApplySave(SaveData save)
@@ -100,6 +114,7 @@ public class Level1Screen : GameScreen, ISaveableScreen
         _metLilJump = save.MetLilJump;
         _lilJumpGone = save.MetLilJump;
         _exitPortal.IsActive = save.MetLilJump;
+        introstarted = save.StartDialog;
 
         _jumpjump.Position = new Vector2(save.PlayerX, save.PlayerY);
     }
@@ -112,7 +127,8 @@ public class Level1Screen : GameScreen, ISaveableScreen
             PlayerX = _jumpjump.Position.X,
             PlayerY = _jumpjump.Position.Y,
             CollectedApples = _apples.Select(a => a.Collected).ToArray(),
-            MetLilJump = _metLilJump
+            MetLilJump = _metLilJump,
+            StartDialog = introstarted
         }.Save();
     }
 
@@ -120,11 +136,55 @@ public class Level1Screen : GameScreen, ISaveableScreen
     {
         base.Update(gameTime, otherScreenHasFocus, coveredByOtherScreen);
         if (!IsActive) return;
+        if (!introstarted)
+        {
+            introstarted = true;
+            var StartLines = new List<DialogueLine>
+                {
+                    new DialogueLine("JumpJump I'm REALLY hungry", _lilJumpPortrait, new Rectangle(0, 0, 15, 15)){
+                    PortraitScale = .6f,
+                    PortraitOffset = new Point(-25, -20)
+                    },
+                    new DialogueLine("Can you get me those apples?", _lilJumpPortrait, new Rectangle(0, 0, 15, 15)){
+                    PortraitScale = .6f,
+                    PortraitOffset = new Point(-25, -20)
+                    },
+                    new DialogueLine("Of course son.", _jumpPortrait, new Rectangle(45, 10, 20, 20)){
+                    PortraitScale = .54f,
+                    PortraitOffset = new Point(-23, -15)
+                    },
+                };
+
+            ScreenManager.AddScreen(new DialogueScreen(StartLines, null));
+            introstarted = true;
+            SaveGame();
+            return;
+            
+        }
+        if (_swapTimer > 0)
+        {
+            _swapTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (_swapTimer <= 0)
+            {
+                _jumpjump.texture = ScreenManager.Game.Content.Load<Texture2D>("kangaroowitharmor");
+            }
+        }
 
         foreach (var apple in _apples) apple.Update(gameTime);
 
         _jumpjump.Update(gameTime, _solids, _ground);
         _jumpjump.Color = Color.White;
+
+        const float BOUNDS_OFFSET_X = 50f;
+        float minX = BOUNDS_OFFSET_X;
+        float maxX = 1920f - _jumpjump.Bounds.Width + BOUNDS_OFFSET_X;
+
+        float clampedX = MathHelper.Clamp(_jumpjump.Position.X, minX, maxX);
+        if (clampedX != _jumpjump.Position.X)
+        {
+            _jumpjump.Position = new Vector2(clampedX, _jumpjump.Position.Y);
+            _jumpjump.bounds.X = clampedX - BOUNDS_OFFSET_X;
+        }
 
         foreach (var apple in _apples)
         {
@@ -133,7 +193,7 @@ public class Level1Screen : GameScreen, ISaveableScreen
                 _jumpjump.Color = Color.Red;
                 apple.Collected = true;
                 _applesLeft--;
-                _eatSound.Play();
+                _collectSound.Play();
                 SaveGame();
             }
         }
@@ -154,18 +214,24 @@ public class Level1Screen : GameScreen, ISaveableScreen
                     PortraitOffset = new Point(-23, -15)
                 },
             };
+            _eatSound.Play();
 
             ScreenManager.AddScreen(new DialogueScreen(lines, () =>
             {
+                _portalSound.Play();
                 _metLilJump = true;
-                _lilJumpGone = true;
                 _exitPortal.IsActive = true;
+                _lilJumpGone = true;
                 SaveGame();
 
                 Vector2 portalCenter = new Vector2(
-                    _exitPortal.Position.X + (_exitPortal.Bounds.Width / 2),
+                    _exitPortal.Position.X + (_exitPortal.Bounds.Width / 2)+50,
                     _exitPortal.Position.Y + (_exitPortal.Bounds.Height / 2));
                 _portalExplosion.Explode(portalCenter);
+                Vector2 jumpCenter = new Vector2(
+                    _jumpjump.Position.X + (_jumpjump.Bounds.Width/2)-50,
+                    _jumpjump.Position.Y + (_jumpjump.Bounds.Height/2)-50
+                );
 
                 var afterLines = new List<DialogueLine>
                 {
@@ -181,9 +247,24 @@ public class Level1Screen : GameScreen, ISaveableScreen
                         PortraitScale = .54f,
                         PortraitOffset = new Point(-23, -15)
                     },
+                    new DialogueLine("Good thing I have my old uniform \n in my pouch", _jumpPortrait, new Rectangle(45, 10, 20, 20)){
+                        PortraitScale = .54f,
+                        PortraitOffset = new Point(-23, -15)
+                    },
+                    new DialogueLine("and this sick ass gun. \n(Click or Press k to shoot)", _jumpPortrait, new Rectangle(45, 10, 20, 20)){
+                        PortraitScale = .54f,
+                        PortraitOffset = new Point(-23, -15)
+                    },
                 };
 
-                ScreenManager.AddScreen(new DialogueScreen(afterLines));
+                ScreenManager.AddScreen(new DialogueScreen(afterLines, () =>
+                {
+                    _changeExplo.Explode(jumpCenter);
+                    _swapTimer = SWAP_DELAY;
+                    _gunSound.Play();
+                    
+
+                }));
             }));
         }
 
@@ -209,15 +290,13 @@ public class Level1Screen : GameScreen, ISaveableScreen
         if (!_lilJumpGone)
         {
             _lilJump.Draw(sb);
-            speechBubble.Draw(sb);
             
         } 
         _exitPortal.Draw(sb);
         _jumpjump.Draw(sb);
 
         sb.DrawString(_spriteFont, $"APPLES LEFT: {_applesLeft}", new Vector2(5, 5), Color.Gold);
-        sb.DrawString(_spriteFont, "TO EXIT GAME PRESS ESC", new Vector2(1500, 2), Color.Gold);
-        sb.DrawString(_spriteFont, "Collect all apples and give it to your son", new Vector2(500, 2), Color.Gold);
+        sb.DrawString(_spriteFont, "TO EXIT GAME PRESS ESC", new Vector2(1490, 2), Color.Gold);
 
         sb.End();
     }
